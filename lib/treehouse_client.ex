@@ -10,7 +10,8 @@ defmodule TreehouseClient do
 
     event = build_event(product_id, type, data)
 
-    Neuron.mutation("{createEvent(event: #{event}, token:\"#{token}\") { event { id } } }")
+    #run in a separate process because we don't care about the response
+    Task.async(fn -> Neuron.mutation("{createEvent(event: #{event}, token:\"#{token}\") { event { id } } }") end)
   end
 
   defp build_event(product_id, type, data) do
