@@ -3,6 +3,11 @@ defmodule TreehouseClient do
   Documentation for TreehouseClient.
   """
 
+  #
+  ##
+  ## Events
+  ##
+  #
   def log_event(type, data) do
     Neuron.Config.set(url: Application.get_env(:treehouse_client, :treehouse_url))
     product_id = Application.get_env(:treehouse_client, :product_id)
@@ -20,5 +25,23 @@ defmodule TreehouseClient do
            |> Enum.map(fn {k, v} -> "{ key: \"#{k}\", value: \"#{v}\" }" end)
            |> Enum.join(", ")
     "{eventTime: \"#{time}\", productId: \"#{product_id}\", eventType: \"#{type}\", data: [#{data}]}"
+  end
+
+  #
+  ##
+  ## Support Messages
+  ##
+  #
+  def create_support_ticket(user_id, email, subject, message) do
+    Neuron.Config.set(url: Application.get_env(:treehouse_client, :treehouse_url))
+    product_id = Application.get_env(:treehouse_client, :product_id)
+    token = Application.get_env(:treehouse_client, :token)
+
+    ticket = build_ticket(product_id, user_id, email, subject, message)
+    Task.async(fn -> Neuron.mutation("{createSupportTicket(ticket: #{ticket}, token:\"#{token}\") { ticket { id } }}") end)
+  end
+
+  defp build_ticket(product_id, user_id, email, subject, issue) do
+    "{productId: \"#{product_id}\", userId: #{user_id}, userEmail: \"#{email}\", subject: \"#{subject}\", issue: \"#{issue}\"}"
   end
 end
